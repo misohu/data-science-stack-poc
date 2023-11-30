@@ -30,13 +30,18 @@ Clone the repository and run the script:
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/your-repository.git
+git clone https://github.com/misohu/data-science-stack-poc.git
 
 # Navigate to the project directory
-cd your-repository
+cd data-science-stack-poc
 
 # Run the script
 ./deploy.sh
 ```
 
-It takes about 8 minutes to deploy. At the end you will be prompted with URLs.
+It takes about 8 minutes to deploy. At the end you will be prompted with URLs. For example:
+
+```
+Access the notebook at http://10.152.183.223/notebook/user-namespace/user-notebook/
+Access MLflow ui at: http://10.152.183.34:5000
+```
