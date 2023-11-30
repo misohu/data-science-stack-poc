@@ -1,0 +1,40 @@
+bundle: kubernetes
+name: mlflow
+docs: https://discourse.charmhub.io/t/mlflow-docs-index/10836
+applications:
+  admission-webhook:
+    charm: admission-webhook
+    channel: 1.8/stable
+    trust: true
+    scale: 1
+    _github_repo_name: admission-webhook-operator
+    _github_repo_branch: track/1.8
+  mlflow-minio:
+    charm: minio
+    channel: ckf-1.7/stable
+    scale: 1
+    trust: true
+    _github_repo_name: minio-operator
+  mlflow-mysql:
+    charm: mysql-k8s
+    channel: 8.0/stable
+    scale: 1
+    trust: true
+    _github_repo_name: mysql-k8s-operator
+  mlflow-server:
+    charm: mlflow-server
+    channel: 2.1/stable
+    scale: 1
+    trust: true
+    _github_repo_name: mlflow-operator
+  jupyter-controller:
+    charm: jupyter-controller
+    channel: latest/edge
+    scale: 1
+    trust: true
+    _github_repo_name: notebook-operators
+    options:
+      use-istio: false
+relations:
+- [mlflow-server, mlflow-minio]
+- [mlflow-server, mlflow-mysql]

@@ -1,0 +1,100 @@
+apiVersion: kubeflow.org/v1alpha1
+kind: PodDefault
+metadata:
+  name: mlflow-server-access-minio
+  namespace: {{ namespace }}
+spec:
+  desc: Allow access to Minio
+  env:
+  - name: AWS_ACCESS_KEY_ID
+    valueFrom:
+      secretKeyRef:
+        key: AWS_ACCESS_KEY_ID
+        name: mlflow-server-minio-artifact
+        optional: false
+  - name: AWS_SECRET_ACCESS_KEY
+    valueFrom:
+      secretKeyRef:
+        key: AWS_SECRET_ACCESS_KEY
+        name: mlflow-server-minio-artifact
+        optional: false
+  - name: MINIO_ENDPOINT_URL
+    value: http://mlflow-minio.kubeflow:9000
+  selector:
+    matchLabels:
+      access-minio: "true"
+---
+apiVersion: kubeflow.org/v1alpha1
+kind: PodDefault
+metadata:
+  name: mlflow-server-minio
+  namespace: {{ namespace }}
+spec:
+  desc: Allow access to MLFlow
+  env:
+  - name: MLFLOW_S3_ENDPOINT_URL
+    value: http://mlflow-minio.kubeflow:9000
+  - name: MLFLOW_TRACKING_URI
+    value: http://mlflow-server.kubeflow.svc.cluster.local:5000
+  selector:
+    matchLabels:
+      mlflow-server-minio: "true"
+---
+apiVersion: v1
+stringData:
+  AWS_ACCESS_KEY_ID: {{ aws_access_key_id }}
+  AWS_SECRET_ACCESS_KEY: {{ aws_secret_access_key }}
+kind: Secret
+metadata:
+  name: mlflow-server-minio-artifact
+  namespace: {{ namespace }}
+type: Opaque
+---
+apiVersion: kubeflow.org/v1
+kind: Notebook
+metadata:
+  labels:
+    access-minio: "true"
+    mlflow-server-minio: "true"
+  name: {{ notebook-name }}
+  namespace: {{ namespace }}
+spec:
+  template:
+    spec:
+      containers:
+      - image: kubeflownotebookswg/jupyter-scipy:v1.8.0
+        imagePullPolicy: IfNotPresent
+        name: {{ notebook-name }}
+        resources:
+          limits:
+            cpu: 2400m
+            memory: 5153960755200m
+          requests:
+            cpu: "2"
+            memory: 4Gi
+        volumeMounts:
+        - mountPath: /dev/shm
+          name: dshm
+        - mountPath: /home/jovyan
+          name: {{ pvc-name }}
+      volumes:
+      - emptyDir:
+          medium: Memory
+        name: dshm
+      - name: {{ pvc-name }}
+        persistentVolumeClaim:
+          claimName: {{ pvc-name }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ pvc-name }}
+  namespace: {{ namespace }}
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: microk8s-hostpath
+  volumeMode: Filesystem
